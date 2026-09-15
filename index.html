@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Trade Post</title>
+<style>
+  :root{
+    --paper:#EFE9DC;
+    --card:#FBF7EE;
+    --ink:#26241D;
+    --ink-soft:#5B564A;
+    --hairline:rgba(38,36,29,0.16);
+    --offer:#3F6C51;
+    --offer-bg:#E3ECE2;
+    --need:#2F5D82;
+    --need-bg:#E1EAF1;
+    --cta:#C97A2E;
+    --cta-ink:#2C1B08;
+    --danger:#A23B2E;
+    --serif: "Iowan Old Style","Palatino Linotype","URW Palladio L","P052",Georgia,serif;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);min-height:100vh;}
+  #app{max-width:920px;margin:0 auto;padding:20px 18px 80px;}
+
+  .masthead{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:18px;flex-wrap:wrap;gap:8px;}
+  .masthead h1{font-family:var(--serif);font-weight:600;font-size:32px;margin:0;letter-spacing:0.2px;}
+  .masthead .tagline{font-size:13px;color:var(--ink-soft);margin-top:2px;}
+  .whoami{font-size:13px;color:var(--ink-soft);text-align:right;}
+  .whoami b{color:var(--ink);}
+  .linklike{background:none;border:none;color:var(--need);cursor:pointer;font-size:13px;padding:0;text-decoration:underline;text-underline-offset:2px;}
+
+  .tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--hairline);flex-wrap:wrap;}
+  .tab{font-family:var(--sans);font-size:14px;padding:9px 14px;background:none;border:none;cursor:pointer;color:var(--ink-soft);border-bottom:2px solid transparent;margin-bottom:-1px;}
+  .tab.active{color:var(--ink);border-bottom:2px solid var(--cta);font-weight:600;}
+
+  .signin-wrap{max-width:420px;margin:60px auto;background:var(--card);border:1px solid var(--hairline);padding:32px 28px;}
+  .signin-wrap h2{font-family:var(--serif);font-size:24px;margin:0 0 4px;}
+  .signin-wrap p{color:var(--ink-soft);font-size:14px;line-height:1.5;margin:0 0 20px;}
+  .signin-wrap code{background:var(--paper);padding:1px 5px;font-size:13px;}
+  .note-box{background:var(--need-bg);border:1px solid rgba(47,93,130,0.25);padding:10px 12px;font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:20px;}
+
+  label{display:block;font-size:12px;color:var(--ink-soft);margin:14px 0 4px;}
+  input[type=text],input[type=email],textarea,select{width:100%;font-family:var(--sans);font-size:14px;padding:9px 10px;border:1px solid var(--hairline);background:#fff;color:var(--ink);}
+  textarea{resize:vertical;min-height:80px;}
+  .row{display:flex;gap:12px;}
+  .row > div{flex:1;}
+  .btn{font-family:var(--sans);font-size:14px;font-weight:600;padding:10px 18px;border:none;cursor:pointer;background:var(--cta);color:var(--cta-ink);}
+  .btn:hover{filter:brightness(0.95);}
+  .btn.secondary{background:transparent;border:1px solid var(--ink);color:var(--ink);}
+  .btn.ghost{background:transparent;border:1px solid var(--hairline);color:var(--ink-soft);}
+  .btn.danger{background:var(--danger);color:#fff;}
+  .btn:disabled{opacity:0.5;cursor:default;}
+  .btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+
+  .board-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;}
+  .board-controls input,.board-controls select{width:auto;}
+  .board-controls input[type=text]{flex:1;min-width:140px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+
+  .card{background:var(--card);border:1px solid var(--hairline);padding:16px 16px 14px;position:relative;}
+  .card:nth-child(3n+1){transform:rotate(-0.4deg);}
+  .card:nth-child(3n+2){transform:rotate(0.3deg);}
+  .card:nth-child(3n){transform:rotate(-0.2deg);}
+  .pin{position:absolute;top:10px;left:10px;width:8px;height:8px;border-radius:50%;}
+  .pin.offer{background:var(--offer);}
+  .pin.need{background:var(--need);}
+  .card-type{font-size:11px;font-weight:700;letter-spacing:0.3px;padding:2px 8px;display:inline-block;margin-left:14px;}
+  .card-type.offer{background:var(--offer-bg);color:var(--offer);}
+  .card-type.need{background:var(--need-bg);color:var(--need);}
+  .card-cat{font-size:11px;color:var(--ink-soft);margin-left:8px;}
+  .card h3{font-family:var(--serif);font-size:18px;margin:10px 0 4px;}
+  .card p.desc{font-size:13.5px;color:var(--ink-soft);line-height:1.45;margin:0 0 10px;}
+  .card .meta{font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .card .actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .card .actions .btn{padding:7px 12px;font-size:12.5px;}
+  .empty{text-align:center;padding:50px 20px;color:var(--ink-soft);font-size:14px;border:1px dashed var(--hairline);}
+
+  .msg-layout{display:flex;gap:0;border:1px solid var(--hairline);min-height:420px;background:var(--card);}
+  .thread-list{width:220px;border-right:1px solid var(--hairline);}
+  .thread-item{padding:12px 14px;border-bottom:1px solid var(--hairline);cursor:pointer;font-size:13.5px;}
+  .thread-item:hover{background:var(--paper);}
+  .thread-item.active{background:var(--paper);font-weight:600;}
+  .thread-item .prev{font-size:12px;color:var(--ink-soft);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;margin-top:2px;}
+  .chat-pane{flex:1;display:flex;flex-direction:column;}
+  .chat-head{padding:12px 16px;border-bottom:1px solid var(--hairline);display:flex;justify-content:space-between;align-items:center;}
+  .chat-head b{font-family:var(--serif);font-size:16px;}
+  .chat-body{flex:1;padding:14px 16px;overflow-y:auto;max-height:340px;}
+  .bubble{max-width:75%;margin-bottom:10px;padding:8px 12px;font-size:13.5px;line-height:1.4;}
+  .bubble.me{background:var(--offer-bg);margin-left:auto;color:var(--ink);}
+  .bubble.them{background:var(--paper);border:1px solid var(--hairline);}
+  .bubble .ts{display:block;font-size:10px;color:var(--ink-soft);margin-top:3px;}
+  .chat-input{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--hairline);}
+  .chat-input input{flex:1;}
+
+  .call-banner{position:fixed;top:16px;right:16px;background:var(--ink);color:#fff;padding:14px 16px;max-width:280px;z-index:50;box-shadow:0 4px 14px rgba(0,0,0,0.25);}
+  .call-banner b{display:block;margin-bottom:2px;font-family:var(--serif);font-size:15px;}
+  .call-banner .btn-row{margin-top:10px;}
+  .call-overlay{position:fixed;inset:0;background:rgba(20,19,15,0.92);z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:20px;}
+  .video-wrap{position:relative;width:min(680px,92vw);aspect-ratio:4/3;background:#000;}
+  video{width:100%;height:100%;object-fit:cover;background:#000;}
+  #localVideo.corner{position:absolute;bottom:10px;right:10px;width:110px;aspect-ratio:4/3;border:2px solid #fff;object-fit:cover;height:auto;}
+  .call-status{margin:14px 0 6px;font-size:14px;color:#ddd;text-align:center;}
+
+  .section-title{font-family:var(--serif);font-size:20px;margin:0 0 14px;}
+  .helptext{font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;line-height:1.5;}
+
+  .skill-picker{border:1px solid var(--hairline);padding:6px 10px;background:#fff;max-height:220px;overflow-y:auto;}
+  .skill-picker summary{cursor:pointer;font-size:13px;font-weight:600;padding:6px 0;list-style:none;}
+  .skill-picker summary::-webkit-details-marker{display:none;}
+  .skill-picker summary::before{content:'▸ ';font-size:11px;}
+  .skill-picker details[open] summary::before{content:'▾ ';}
+  .skill-row{display:flex;align-items:center;gap:7px;font-size:13px;padding:3px 0 3px 14px;font-weight:400;}
+  .chip{display:inline-block;background:var(--paper);border:1px solid var(--hairline);font-size:11.5px;padding:2px 8px;margin:2px 4px 2px 0;}
+  .chip.offer{background:var(--offer-bg);color:var(--offer);border-color:transparent;}
+  .chip.need{background:var(--need-bg);color:var(--need);border-color:transparent;}
+  .match-card{background:var(--card);border:1px solid var(--hairline);padding:16px;margin-bottom:14px;}
+  .match-card h3{font-family:var(--serif);font-size:17px;margin:0 0 6px;}
+  .match-line{font-size:13px;color:var(--ink-soft);margin:4px 0;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+/* =====================================================================
+   STEP 1: paste your Firebase web app config here.
+   Get this from: Firebase console > Project settings > Your apps > SDK setup.
+   See README.md in this repo for the full walkthrough.
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDpUEtwG-9HQoe3V0BX3RJq50doKTJzZF0",
+  authDomain: "trade-post-9865f.firebaseapp.com",
+  projectId: "trade-post-9865f",
+  storageBucket: "trade-post-9865f.firebasestorage.app",
+  messagingSenderId: "80754322916",
+  appId: "1:80754322916:web:e63b52e5b9f9250c7eebf1",
+  measurementId: "G-R0TPJYQCDZ"
+
+if(firebaseConfig.apiKey === "YOUR_API_KEY"){
+  document.getElementById('app').innerHTML = `
+    <div class="signin-wrap">
+      <h2>Almost there</h2>
+      <p>This site needs your own Firebase project's config values pasted into <code>index.html</code> — look for the <code>firebaseConfig</code> block near the top of the script, and swap in the real values.</p>
+      <p>Full steps are in <code>README.md</code> in this project.</p>
+    </div>`;
+  throw new Error('Firebase config not set — see README.md');
+}
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+/* ================= Skill taxonomy ================= */
+const SKILLS = {
+  "Home Repair": ["Plumbing basics","Drywall patching","Painting","Appliance repair","Electrical (minor)"],
+  "Auto": ["Oil changes","Brake work","Tire rotation","Basic diagnostics","Detailing"],
+  "Carpentry": ["Furniture building","Deck repair","Cabinetry","Fence repair"],
+  "Tech Help": ["Computer setup","Phone troubleshooting","Wifi/network help","Smart home setup"],
+  "Tutoring & Lessons": ["Math tutoring","Music lessons","Language practice","Test prep"],
+  "Childcare": ["Babysitting","After-school pickup","Weekend sitting"],
+  "Yard & Garden": ["Lawn mowing","Garden beds","Tree trimming","Snow shoveling"],
+  "Cooking & Baking": ["Meal prep","Baking/bread","Canning & preserving"],
+  "Creative & Design": ["Photography","Graphic design","Sewing & alterations","Painting/art"],
+};
+const SKILL_TO_CATEGORY = {};
+Object.entries(SKILLS).forEach(([cat,list]) => list.forEach(s => SKILL_TO_CATEGORY[s] = cat));
+const CATEGORIES = Object.keys(SKILLS).concat(['Other']);
+const RTC_CONFIG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+/* ================= Storage helpers (Firestore-backed) =================
+   Same sset/sget/sdel shape as before; the old "shared" boolean argument
+   is accepted but ignored since every doc here lives in one shared project. */
+async function sset(key, value){
+  try{ await setDoc(doc(db,'kv',key), { value: JSON.stringify(value), updatedAt: Date.now() }); return true; }
+  catch(e){ console.error('firestore set failed', key, e); return null; }
+}
+async function sget(key){
+  try{ const snap = await getDoc(doc(db,'kv',key)); return snap.exists() ? JSON.parse(snap.data().value) : null; }
+  catch(e){ return null; }
+}
+async function sdel(key){ try{ await deleteDoc(doc(db,'kv',key)); }catch(e){} }
+
+/* Local, per-browser "remember me" — a real browser now, so localStorage is fine here. */
+function saveIdentity(me){ try{ localStorage.setItem('trade-post-identity', JSON.stringify(me)); }catch(e){} }
+function loadIdentity(){ try{ const v = localStorage.getItem('trade-post-identity'); return v ? JSON.parse(v) : null; }catch(e){ return null; } }
+function clearIdentity(){ try{ localStorage.removeItem('trade-post-identity'); }catch(e){} }
+
+/* ================= State ================= */
+const state = {
+  me: null, screen: 'board',
+  listings: [], profiles: {},
+  categoryFilter: 'all', typeFilter: 'all', searchQuery: '',
+  activeThreadId: null, threadMessages: [],
+  postDraft: {type:'offer', skill:'', customSkill:'', title:'', description:''},
+  room: null, roomRole: null, roomInvite: null,
+  callState: null, callPeer: null, pc: null, localStream: null, currentCallId: null,
+  _remoteStream: null, _negotiationStarted: false, _answerApplied: false, _offerApplied: false,
+};
+
+function esc(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function threadIdFor(a,b){ return [a,b].sort().join('__'); }
+function timeAgo(ts){
+  const d = Date.now()-ts, m = Math.floor(d/60000);
+  if(m<1) return 'just now'; if(m<60) return m+'m ago';
+  const h = Math.floor(m/60); if(h<24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+/* ================= Data load/save ================= */
+async function loadAll(){
+  state.listings = (await sget('listings-all')) || [];
+  state.profiles = (await sget('profiles-all')) || {};
+}
+async function saveListings(){ await sset('listings-all', state.listings); }
+async function saveProfiles(){ await sset('profiles-all', state.profiles); }
+
+async function loadThread(otherEmail){
+  const id = threadIdFor(state.me.email, otherEmail);
+  state.activeThreadId = id;
+  state.threadMessages = (await sget('thread:'+id)) || [];
+}
+async function sendMessage(otherEmail, text){
+  const id = threadIdFor(state.me.email, otherEmail);
+  const msgs = (await sget('thread:'+id)) || [];
+  msgs.push({from: state.me.email, text, ts: Date.now()});
+  await sset('thread:'+id, msgs);
+  state.threadMessages = msgs;
+}
+async function myThreadPartners(){ return (await sget('thread-index:'+state.me.email)) || []; }
+async function ensureThreadIndexed(otherEmail){
+  const mine = (await sget('thread-index:'+state.me.email)) || [];
+  if(!mine.includes(otherEmail)){ mine.push(otherEmail); await sset('thread-index:'+state.me.email, mine); }
+  const theirs = (await sget('thread-index:'+otherEmail)) || [];
+  if(!theirs.includes(state.me.email)){ theirs.push(state.me.email); await sset('thread-index:'+otherEmail, theirs); }
+}
+
+/* ================= Matching ================= */
+function computeMatches(){
+  const mine = state.profiles[state.me.email] || {};
+  const myOffer = mine.offerSkills||[], myNeed = mine.needSkills||[];
+  const results = [];
+  Object.values(state.profiles).forEach(p=>{
+    if(!p.email || p.email===state.me.email) return;
+    const theirOffer = p.offerSkills||[], theirNeed = p.needSkills||[];
+    const theyHaveWhatINeed = theirOffer.filter(s=>myNeed.includes(s));
+    const theyNeedWhatIHave = theirNeed.filter(s=>myOffer.includes(s));
+    if(theyHaveWhatINeed.length || theyNeedWhatIHave.length) results.push({profile:p, theyHaveWhatINeed, theyNeedWhatIHave});
+  });
+  return results;
+}
+
+/* ================= Render ================= */
+const app = document.getElementById('app');
+
+function render(){
+  if(!state.me){ renderSignIn(); return; }
+  let html = renderHeader() + renderTabs();
+  if(state.screen==='board') html += renderBoard();
+  else if(state.screen==='post') html += renderPost();
+  else if(state.screen==='messages') html += renderMessagesShell();
+  else if(state.screen==='matches') html += renderMatches();
+  else if(state.screen==='profile') html += renderProfile();
+  app.innerHTML = html;
+  attachCommonHandlers();
+  if(state.screen==='board') attachBoardHandlers();
+  if(state.screen==='post') attachPostHandlers();
+  if(state.screen==='messages') attachMessagesHandlers();
+  if(state.screen==='matches') attachMatchesHandlers();
+  if(state.screen==='profile') attachProfileHandlers();
+  renderOverlays();
+}
+
+function renderSignIn(){
+  app.innerHTML = `
+    <div class="signin-wrap">
+      <h2>The Trade Post</h2>
+      <p>A community board for swapping skills — need your fence fixed, offer guitar lessons in return.</p>
+      <div class="note-box">This demo signs you in with just a name and email — it isn't real "Sign in with Google." All listings, profiles and messages here are visible to anyone with this link, so don't share anything private.</div>
+      <label>Your name</label><input type="text" id="in-name" placeholder="Jamie Alvarez">
+      <label>Email</label><input type="email" id="in-email" placeholder="jamie@gmail.com">
+      <label>Neighborhood or town</label><input type="text" id="in-loc" placeholder="Harbor Springs, MI">
+      <div class="btn-row"><button class="btn" id="in-go">Enter the board</button></div>
+    </div>`;
+  document.getElementById('in-go').onclick = async () => {
+    const name = document.getElementById('in-name').value.trim();
+    const email = document.getElementById('in-email').value.trim().toLowerCase();
+    const loc = document.getElementById('in-loc').value.trim();
+    if(!name || !email){ alert('Name and email are both needed.'); return; }
+    state.me = {name, email, location: loc||'Unspecified', bio:''};
+    saveIdentity(state.me);
+    await loadAll();
+    state.profiles[email] = {...state.profiles[email], ...state.me};
+    await saveProfiles();
+    state.screen='board';
+    startPolling();
+    render();
+  };
+}
+
+function renderHeader(){
+  return `<div class="masthead">
+    <div><h1>The Trade Post</h1><div class="tagline">Trade skills, not dollars.</div></div>
+    <div class="whoami">Signed in as <b>${esc(state.me.name)}</b><br><button class="linklike" id="btn-signout">switch person</button></div>
+  </div>`;
+}
+function renderTabs(){
+  const t = (id,label) => `<button class="tab ${state.screen===id?'active':''}" data-tab="${id}">${label}</button>`;
+  return `<div class="tabs">${t('board','Board')}${t('post','Post a Listing')}${t('matches','Matches')}${t('messages','Messages')}${t('profile','Profile')}</div>`;
+}
+
+function renderBoard(){
+  const q = state.searchQuery.toLowerCase();
+  let items = state.listings.filter(l=>{
+    if(state.typeFilter!=='all' && l.type!==state.typeFilter) return false;
+    if(state.categoryFilter!=='all' && l.category!==state.categoryFilter) return false;
+    if(q && !((l.title||'').toLowerCase().includes(q) || (l.description||'').toLowerCase().includes(q) || (l.skill||'').toLowerCase().includes(q))) return false;
+    return true;
+  }).sort((a,b)=>b.createdAt-a.createdAt);
+  const catOpts = CATEGORIES.map(c=>`<option value="${esc(c)}" ${state.categoryFilter===c?'selected':''}>${esc(c)}</option>`).join('');
+  let cards = items.map(l=>{
+    const mine = l.authorEmail === state.me.email;
+    return `<div class="card">
+      <span class="pin ${l.type}"></span>
+      <span class="card-type ${l.type}">${l.type==='offer'?'OFFERING':'NEEDS'}</span>
+      <span class="card-cat">${esc(l.skill||l.category)}</span>
+      <h3>${esc(l.title)}</h3>
+      <p class="desc">${esc(l.description)}</p>
+      <div class="meta">${esc(l.authorName)} · ${esc(l.location||'')} · ${timeAgo(l.createdAt)}</div>
+      <div class="actions">
+        ${mine ? `<button class="btn ghost" data-del="${l.id}">Remove</button>`
+               : `<button class="btn secondary" data-msg="${l.authorEmail}|${esc(l.authorName)}">Message</button>
+                  <button class="btn" data-call="${l.authorEmail}|${esc(l.authorName)}">Video call</button>`}
+      </div>
+    </div>`;
+  }).join('');
+  if(!items.length) cards = `<div class="empty">Nothing here yet. Be the first to post an offer or a need.</div>`;
+  return `<div class="board-controls">
+    <select id="f-type">
+      <option value="all" ${state.typeFilter==='all'?'selected':''}>All listings</option>
+      <option value="offer" ${state.typeFilter==='offer'?'selected':''}>Offering</option>
+      <option value="need" ${state.typeFilter==='need'?'selected':''}>Needs</option>
+    </select>
+    <select id="f-cat"><option value="all">All categories</option>${catOpts}</select>
+    <input type="text" id="f-search" placeholder="Search listings…" value="${esc(state.searchQuery)}">
+    <button class="btn ghost" id="f-refresh">Refresh</button>
+  </div>
+  <div class="grid" id="board-grid">${cards}</div>`;
+}
+
+function renderPost(){
+  const d = state.postDraft;
+  const groups = Object.entries(SKILLS).map(([cat,list])=>{
+    const opts = list.map(s=>`<option value="${esc(s)}" ${d.skill===s?'selected':''}>${esc(s)}</option>`).join('');
+    return `<optgroup label="${esc(cat)}">${opts}</optgroup>`;
+  }).join('');
+  return `
+  <div class="section-title">Post a listing</div>
+  <div class="row">
+    <div><label>This is a…</label>
+      <select id="p-type">
+        <option value="offer" ${d.type==='offer'?'selected':''}>Skill I'm offering</option>
+        <option value="need" ${d.type==='need'?'selected':''}>Help I need</option>
+      </select>
+    </div>
+    <div><label>Skill</label>
+      <select id="p-skill">
+        <option value="">Choose a skill…</option>
+        ${groups}
+        <option value="__other" ${d.skill==='__other'?'selected':''}>Something else…</option>
+      </select>
+    </div>
+  </div>
+  ${d.skill==='__other' ? `<label>Name your skill</label><input type="text" id="p-skill-other" placeholder="e.g. Dog training" value="${esc(d.customSkill)}">` : ''}
+  <label>Title</label>
+  <input type="text" id="p-title" placeholder="e.g. Basic car maintenance & oil changes" value="${esc(d.title)}">
+  <label>Details</label>
+  <textarea id="p-desc" placeholder="What you're offering or what you need, and any specifics.">${esc(d.description)}</textarea>
+  <div class="btn-row"><button class="btn" id="p-submit">Post to the board</button></div>`;
+}
+
+function renderMessagesShell(){
+  return `<div class="section-title">Messages</div><div id="msg-area" class="msg-layout"></div>`;
+}
+
+function renderSkillPicker(containerId, selected){
+  return Object.entries(SKILLS).map(([cat,list])=>{
+    const boxes = list.map(s=>{
+      const checked = selected.includes(s) ? 'checked' : '';
+      return `<label class="skill-row"><input type="checkbox" data-skill="${esc(s)}" ${checked}> ${esc(s)}</label>`;
+    }).join('');
+    return `<details><summary>${esc(cat)}</summary>${boxes}</details>`;
+  }).join('');
+}
+
+function renderProfile(){
+  const p = state.profiles[state.me.email] || state.me;
+  const myListings = state.listings.filter(l=>l.authorEmail===state.me.email);
+  return `
+  <div class="section-title">Your profile</div>
+  <label>Name</label><input type="text" id="pr-name" value="${esc(p.name)}">
+  <label>Neighborhood / town</label><input type="text" id="pr-loc" value="${esc(p.location||'')}">
+  <label>Short bio</label><textarea id="pr-bio" placeholder="A line about you and what you like to trade.">${esc(p.bio||'')}</textarea>
+  <label>Skills you can offer</label>
+  <div class="skill-picker" id="pr-offer-skills">${renderSkillPicker('offer', p.offerSkills||[])}</div>
+  <label>Skills or help you're looking for</label>
+  <div class="skill-picker" id="pr-need-skills">${renderSkillPicker('need', p.needSkills||[])}</div>
+  <div class="btn-row"><button class="btn" id="pr-save">Save profile</button></div>
+  <div class="section-title" style="margin-top:32px;">Your listings</div>
+  ${myListings.length ? '<div class="grid">'+myListings.map(l=>`
+    <div class="card">
+      <span class="pin ${l.type}"></span>
+      <span class="card-type ${l.type}">${l.type==='offer'?'OFFERING':'NEEDS'}</span>
+      <span class="card-cat">${esc(l.skill||l.category)}</span>
+      <h3>${esc(l.title)}</h3>
+      <p class="desc">${esc(l.description)}</p>
+      <div class="actions"><button class="btn ghost" data-del="${l.id}">Remove</button></div>
+    </div>`).join('')+'</div>' : '<div class="empty">You haven\'t posted anything yet.</div>'}
+  `;
+}
+
+function renderMatches(){
+  const mine = state.profiles[state.me.email] || {};
+  if(!(mine.offerSkills||[]).length && !(mine.needSkills||[]).length){
+    return `<div class="section-title">Matches</div>
+      <div class="empty">Add skills you offer and skills you need on your Profile tab, and matches will show up here automatically.</div>`;
+  }
+  const matches = computeMatches();
+  if(!matches.length){
+    return `<div class="section-title">Matches</div><div class="empty">No overlaps yet — check back as more neighbors join the board.</div>`;
+  }
+  const cards = matches.map(m=>{
+    const p = m.profile;
+    let lines = '';
+    if(m.theyHaveWhatINeed.length) lines += `<div class="match-line">They can help with: ${m.theyHaveWhatINeed.map(s=>`<span class="chip offer">${esc(s)}</span>`).join('')}</div>`;
+    if(m.theyNeedWhatIHave.length) lines += `<div class="match-line">They're looking for: ${m.theyNeedWhatIHave.map(s=>`<span class="chip need">${esc(s)}</span>`).join('')}</div>`;
+    return `<div class="match-card">
+      <h3>${esc(p.name)}</h3>
+      <div class="match-line" style="color:var(--ink-soft);">${esc(p.location||'')}${p.bio?' · '+esc(p.bio):''}</div>
+      ${lines}
+      <div class="btn-row">
+        <button class="btn secondary" data-msg="${esc(p.email)}|${esc(p.name)}">Message</button>
+        <button class="btn" data-call="${esc(p.email)}|${esc(p.name)}">Video call</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="section-title">Matches</div>${cards}`;
+}
+
+/* ================= Handlers ================= */
+function attachCommonHandlers(){
+  document.getElementById('btn-signout').onclick = () => {
+    stopPolling(); cleanupRoom();
+    clearIdentity();
+    state.me = null; render();
+  };
+  document.querySelectorAll('.tab').forEach(b=>{
+    b.onclick = async () => { state.screen = b.dataset.tab; if(state.screen==='board') await loadAll(); render(); };
+  });
+}
+
+function attachBoardHandlers(){
+  document.getElementById('f-type').onchange = e => { state.typeFilter=e.target.value; render(); };
+  document.getElementById('f-cat').onchange = e => { state.categoryFilter=e.target.value; render(); };
+  document.getElementById('f-search').oninput = e => { state.searchQuery=e.target.value; render(); };
+  document.getElementById('f-refresh').onclick = async () => { await loadAll(); render(); };
+  attachListingActionHandlers();
+}
+function attachListingActionHandlers(){
+  document.querySelectorAll('[data-del]').forEach(b=>{
+    b.onclick = async () => { state.listings = state.listings.filter(l=>l.id!==b.dataset.del); await saveListings(); render(); };
+  });
+  document.querySelectorAll('[data-msg]').forEach(b=>{
+    b.onclick = async () => {
+      const [email,name] = b.dataset.msg.split('|');
+      await ensureThreadIndexed(email); await loadThread(email);
+      state.screen='messages'; state._openWith = {email,name}; render();
+    };
+  });
+  document.querySelectorAll('[data-call]').forEach(b=>{
+    b.onclick = () => { const [email,name] = b.dataset.call.split('|'); proposeRoom(email,name); };
+  });
+}
+
+function attachPostHandlers(){
+  document.getElementById('p-type').onchange = e => state.postDraft.type = e.target.value;
+  document.getElementById('p-skill').onchange = e => { state.postDraft.skill = e.target.value; render(); };
+  const other = document.getElementById('p-skill-other');
+  if(other) other.oninput = e => state.postDraft.customSkill = e.target.value;
+  document.getElementById('p-title').oninput = e => state.postDraft.title = e.target.value;
+  document.getElementById('p-desc').oninput = e => state.postDraft.description = e.target.value;
+  document.getElementById('p-submit').onclick = async () => {
+    const d = state.postDraft;
+    const skillName = d.skill==='__other' ? (d.customSkill||'').trim() : d.skill;
+    if(!skillName){ alert('Pick a skill (or name your own) first.'); return; }
+    if(!d.title.trim() || !d.description.trim()){ alert('Add a title and some details first.'); return; }
+    const category = d.skill==='__other' ? 'Other' : (SKILL_TO_CATEGORY[d.skill] || 'Other');
+    await loadAll();
+    state.listings.push({
+      id: crypto.randomUUID(), type: d.type, skill: skillName, category,
+      title: d.title.trim(), description: d.description.trim(),
+      authorEmail: state.me.email, authorName: state.me.name, location: state.me.location,
+      createdAt: Date.now()
+    });
+    await saveListings();
+    state.postDraft = {type:'offer', skill:'', customSkill:'', title:'', description:''};
+    state.screen='board'; render();
+  };
+}
+
+async function attachMessagesHandlers(){
+  const area = document.getElementById('msg-area');
+  const partners = await myThreadPartners();
+  let openWith = state._openWith;
+  if(!openWith && partners.length){
+    const email = partners[0];
+    openWith = {email, name: (state.profiles[email]&&state.profiles[email].name) || email};
+  }
+  if(openWith && (!state.activeThreadId || state.activeThreadId!==threadIdFor(state.me.email, openWith.email))) await loadThread(openWith.email);
+  const list = partners.map(email=>{
+    const prof = state.profiles[email] || {name:email};
+    const active = openWith && openWith.email===email;
+    return `<div class="thread-item ${active?'active':''}" data-open="${email}|${esc(prof.name)}">${esc(prof.name)}<span class="prev">${esc(email)}</span></div>`;
+  }).join('') || `<div class="thread-item" style="color:var(--ink-soft);cursor:default;">Message someone from the board to start a chat.</div>`;
+
+  let chat = `<div class="chat-pane"><div class="empty" style="border:none;">Pick a conversation, or message someone from the Board.</div></div>`;
+  if(openWith){
+    const bubbles = state.threadMessages.map(m=>{
+      const mine = m.from===state.me.email;
+      return `<div class="bubble ${mine?'me':'them'}">${esc(m.text)}<span class="ts">${timeAgo(m.ts)}</span></div>`;
+    }).join('') || `<div class="empty" style="border:none;">No messages yet — say hello.</div>`;
+    chat = `<div class="chat-pane">
+      <div class="chat-head"><b>${esc(openWith.name)}</b><button class="btn" id="chat-call">Video call</button></div>
+      <div class="chat-body" id="chat-body">${bubbles}</div>
+      <div class="chat-input"><input type="text" id="chat-text" placeholder="Type a message…"><button class="btn" id="chat-send">Send</button></div>
+    </div>`;
+  }
+  area.innerHTML = `<div class="thread-list">${list}</div>${chat}`;
+  area.querySelectorAll('[data-open]').forEach(el=>{
+    el.onclick = async () => { const [email,name] = el.dataset.open.split('|'); state._openWith={email,name}; await loadThread(email); render(); };
+  });
+  const sendBtn = document.getElementById('chat-send');
+  if(sendBtn){
+    const input = document.getElementById('chat-text');
+    const doSend = async () => {
+      const text = input.value.trim(); if(!text) return;
+      await ensureThreadIndexed(openWith.email); await sendMessage(openWith.email, text);
+      input.value=''; render();
+      const body = document.getElementById('chat-body'); if(body) body.scrollTop = body.scrollHeight;
+    };
+    sendBtn.onclick = doSend;
+    input.addEventListener('keydown', e => { if(e.key==='Enter') doSend(); });
+    const body = document.getElementById('chat-body'); if(body) body.scrollTop = body.scrollHeight;
+  }
+  const callBtn = document.getElementById('chat-call');
+  if(callBtn) callBtn.onclick = () => proposeRoom(openWith.email, openWith.name);
+}
+
+function attachMatchesHandlers(){ attachListingActionHandlers(); }
+
+function attachProfileHandlers(){
+  document.getElementById('pr-save').onclick = async () => {
+    const name = document.getElementById('pr-name').value.trim();
+    const loc = document.getElementById('pr-loc').value.trim();
+    const bio = document.getElementById('pr-bio').value.trim();
+    const offerSkills = Array.from(document.querySelectorAll('#pr-offer-skills input[data-skill]:checked')).map(el=>el.dataset.skill);
+    const needSkills = Array.from(document.querySelectorAll('#pr-need-skills input[data-skill]:checked')).map(el=>el.dataset.skill);
+    state.me.name = name; state.me.location = loc; state.me.bio = bio;
+    saveIdentity(state.me);
+    state.profiles[state.me.email] = {...state.profiles[state.me.email], name, location:loc, bio, offerSkills, needSkills, email: state.me.email};
+    await saveProfiles(); render();
+  };
+  document.querySelectorAll('[data-del]').forEach(b=>{
+    b.onclick = async () => { state.listings = state.listings.filter(l=>l.id!==b.dataset.del); await saveListings(); render(); };
+  });
+}
+
+/* ================= Holding room (pre-call lobby) ================= */
+async function getMedia(){
+  try{ return await navigator.mediaDevices.getUserMedia({ video:true, audio:true }); }
+  catch(e){
+    alert('Could not access your camera/microphone. Make sure you allowed camera access, and that the site is loaded over https (Netlify does this automatically).');
+    throw e;
+  }
+}
+
+async function proposeRoom(email, name){
+  if(state.room || state.callState){ alert("Finish or leave your current call first."); return; }
+  const roomId = crypto.randomUUID();
+  const room = {
+    roomId, createdBy: state.me.email,
+    a: { email: state.me.email, name: state.me.name, present:true, ready:false },
+    b: { email, name, present:false, ready:false },
+    status: 'waiting', createdAt: Date.now()
+  };
+  await sset('room:'+roomId, room);
+  await sset('room-invite:'+email, { roomId, fromEmail: state.me.email, fromName: state.me.name, status:'pending', ts: Date.now() });
+  state.room = room; state.roomRole = 'a';
+  await enterLobby();
+}
+
+async function joinRoom(){
+  const inv = state.roomInvite;
+  if(!inv) return;
+  state.roomInvite = null;
+  const room = await sget('room:'+inv.roomId);
+  if(!room){ render(); return; }
+  room.b.present = true;
+  await sset('room:'+inv.roomId, room);
+  await sdel('room-invite:'+state.me.email);
+  state.room = room; state.roomRole = 'b';
+  await enterLobby();
+}
+
+async function declineInvite(){
+  const inv = state.roomInvite;
+  state.roomInvite = null;
+  if(inv){
+    const room = await sget('room:'+inv.roomId);
+    if(room) await sset('room:'+inv.roomId, {...room, status:'declined'});
+    await sdel('room-invite:'+state.me.email);
+  }
+  render();
+}
+
+async function enterLobby(){
+  try{ state.localStream = await getMedia(); }
+  catch(e){ cleanupRoom(); render(); return; }
+  render();
+}
+
+async function toggleReady(){
+  if(!state.room) return;
+  const fresh = await sget('room:'+state.room.roomId);
+  if(!fresh) return;
+  fresh[state.roomRole].ready = !fresh[state.roomRole].ready;
+  await sset('room:'+state.room.roomId, fresh);
+  state.room = fresh;
+  render();
+}
+
+async function cancelRoom(){
+  if(state.room) await sset('room:'+state.room.roomId, {...state.room, status:'ended'});
+  cleanupRoom();
+  render();
+}
+
+function cleanupRoom(){
+  if(state.localStream){ state.localStream.getTracks().forEach(t=>t.stop()); }
+  if(state.pc){ try{ state.pc.close(); }catch(e){} }
+  state.room=null; state.roomRole=null; state.callState=null; state.callPeer=null;
+  state.pc=null; state.localStream=null; state._remoteStream=null; state.currentCallId=null;
+  state._negotiationStarted=false; state._answerApplied=false; state._offerApplied=false;
+}
+
+function waitForIceGatheringComplete(pc){
+  if(pc.iceGatheringState === 'complete') return Promise.resolve();
+  return new Promise(resolve => {
+    function check(){ if(pc.iceGatheringState==='complete'){ pc.removeEventListener('icegatheringstatechange', check); resolve(); } }
+    pc.addEventListener('icegatheringstatechange', check);
+    setTimeout(resolve, 4000);
+  });
+}
+
+async function beginNegotiation(){
+  const other = state.roomRole==='a' ? state.room.b : state.room.a;
+  state.callState = 'connecting';
+  state.callPeer = { email: other.email, name: other.name };
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  state.pc = pc;
+  state.localStream.getTracks().forEach(t=>pc.addTrack(t, state.localStream));
+  pc.ontrack = ev => { state._remoteStream = ev.streams[0]; renderOverlays(); };
+  pc.onconnectionstatechange = () => { if(pc.connectionState==='connected'){ state.callState='connected'; render(); } };
+  state.currentCallId = state.room.roomId;
+  if(state.roomRole==='a'){
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await waitForIceGatheringComplete(pc);
+    await sset('call:'+state.room.roomId, { offer: pc.localDescription, status:'ringing' });
+  }
+  render();
+}
+
+async function endCall(){
+  if(state.currentCallId){
+    const cd = await sget('call:'+state.currentCallId);
+    if(cd) await sset('call:'+state.currentCallId, {...cd, status:'ended'});
+  }
+  if(state.room) await sset('room:'+state.room.roomId, {...state.room, status:'ended'});
+  cleanupRoom(); render();
+}
+
+/* main poll loop: incoming invite, room status transitions, live call signaling, message refresh */
+let pollHandle = null;
+function startPolling(){ stopPolling(); pollHandle = setInterval(pollTick, 1800); }
+function stopPolling(){ if(pollHandle) clearInterval(pollHandle); pollHandle=null; }
+
+async function pollTick(){
+  if(!state.me) return;
+  let needsRender = false;
+
+  if(!state.room){
+    const inv = await sget('room-invite:'+state.me.email);
+    const next = (inv && inv.status==='pending') ? inv : null;
+    if(JSON.stringify(next) !== JSON.stringify(state.roomInvite)){ state.roomInvite = next; needsRender = true; }
+  }
+
+  if(state.room){
+    const fresh = await sget('room:'+state.room.roomId);
+    if(!fresh || fresh.status==='ended' || fresh.status==='declined'){
+      cleanupRoom(); needsRender = true;
+    } else {
+      state.room = fresh;
+      if(fresh.status==='waiting' && fresh.a.ready && fresh.b.ready && state.roomRole==='a'){
+        fresh.status = 'active';
+        await sset('room:'+fresh.roomId, fresh);
+      }
+      if(state.room.status==='active' && !state._negotiationStarted){
+        state._negotiationStarted = true;
+        await beginNegotiation();
+      }
+      needsRender = true;
+    }
+  }
+
+  if(state.currentCallId && state.pc){
+    const cd = await sget('call:'+state.currentCallId);
+    if(cd){
+      if(state.roomRole==='a' && cd.answer && !state._answerApplied){
+        state._answerApplied = true;
+        try{ await state.pc.setRemoteDescription(cd.answer); }catch(e){}
+      }
+      if(state.roomRole==='b' && cd.offer && !state._offerApplied){
+        state._offerApplied = true;
+        try{
+          await state.pc.setRemoteDescription(cd.offer);
+          const answer = await state.pc.createAnswer();
+          await state.pc.setLocalDescription(answer);
+          await waitForIceGatheringComplete(state.pc);
+          await sset('call:'+state.currentCallId, {...cd, answer: state.pc.localDescription, status:'answered'});
+        }catch(e){}
+      }
+      if(cd.status==='ended'){ cleanupRoom(); needsRender = true; }
+    }
+  }
+
+  if(state.screen==='messages' && state._openWith){
+    const msgs = await sget('thread:'+threadIdFor(state.me.email, state._openWith.email));
+    if(msgs && msgs.length !== state.threadMessages.length){ state.threadMessages = msgs; needsRender = true; }
+  }
+
+  if(needsRender) render();
+}
+
+/* ================= Overlays ================= */
+function lobbyStatusText(){
+  const room = state.room, me = room[state.roomRole], other = room[state.roomRole==='a'?'b':'a'];
+  if(!other.present) return other.name+" hasn't joined yet — sit tight.";
+  if(!me.ready && !other.ready) return other.name+' is here. Click "I\'m ready" when you want to start.';
+  if(me.ready && !other.ready) return 'Waiting for '+other.name+' to get ready…';
+  if(!me.ready && other.ready) return other.name+' is ready — click "I\'m ready" to begin.';
+  return 'Starting the call…';
+}
+function callStatusLabel(){
+  if(state.callState==='connecting') return 'Connecting to '+esc(state.callPeer?.name||'')+'…';
+  if(state.callState==='connected') return 'Connected with '+esc(state.callPeer?.name||'');
+  return '';
+}
+
+function renderOverlays(){
+  document.querySelectorAll('.call-banner,.call-overlay').forEach(n=>n.remove());
+  let extra = '';
+
+  if(state.roomInvite && !state.room){
+    extra += `<div class="call-banner">
+      <b>${esc(state.roomInvite.fromName)}</b> wants to have a face-to-face chat
+      <div class="btn-row">
+        <button class="btn" id="room-join">Join</button>
+        <button class="btn ghost" id="room-decline">Decline</button>
+      </div>
+    </div>`;
+  }
+
+  if(state.room && state.room.status==='waiting' && !state.callState){
+    const meReady = state.room[state.roomRole].ready;
+    extra += `<div class="call-overlay">
+      <div class="video-wrap"><video id="localVideo" autoplay playsinline muted></video></div>
+      <div class="call-status">${lobbyStatusText()}</div>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="btn ${meReady?'secondary':''}" id="lobby-ready">${meReady? "You're ready ✓ — cancel" : "I'm ready"}</button>
+        <button class="btn ghost" id="lobby-cancel">Leave</button>
+      </div>
+    </div>`;
+  } else if(state.callState){
+    extra += `<div class="call-overlay">
+      <div class="video-wrap">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" class="corner" autoplay playsinline muted></video>
+      </div>
+      <div class="call-status">${callStatusLabel()}</div>
+      <div class="btn-row" style="justify-content:center;"><button class="btn danger" id="call-hangup">End call</button></div>
+    </div>`;
+  }
+
+  if(extra) app.insertAdjacentHTML('beforeend', extra);
+
+  const join = document.getElementById('room-join'); if(join) join.onclick = joinRoom;
+  const decline = document.getElementById('room-decline'); if(decline) decline.onclick = declineInvite;
+  const ready = document.getElementById('lobby-ready'); if(ready) ready.onclick = toggleReady;
+  const cancel = document.getElementById('lobby-cancel'); if(cancel) cancel.onclick = cancelRoom;
+  const hangup = document.getElementById('call-hangup'); if(hangup) hangup.onclick = endCall;
+
+  if(state.localStream){
+    const lv = document.getElementById('localVideo');
+    if(lv && lv.srcObject !== state.localStream) lv.srcObject = state.localStream;
+  }
+  if(state._remoteStream){
+    const rv = document.getElementById('remoteVideo');
+    if(rv && rv.srcObject !== state._remoteStream) rv.srcObject = state._remoteStream;
+  }
+}
+
+/* ================= Boot ================= */
+const saved = loadIdentity();
+if(saved){
+  state.me = saved;
+  (async () => {
+    await loadAll();
+    state.profiles[saved.email] = {...state.profiles[saved.email], ...saved};
+    await saveProfiles();
+    startPolling();
+    render();
+  })();
+} else {
+  render();
+}
+</script>
+</body>
+</html>
